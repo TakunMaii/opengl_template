@@ -5,14 +5,26 @@ ROOT_SOURCE=src/main.c src/glad.c
 SOURCE=
 
 CC=gcc
-UNAME_S := $(shell uname -s)
-UNAME_M := $(shell uname -m)
+EXE_EXT :=
 
 CPPFLAGS := -I external/include
 CFLAGS := -Wall -Wextra
 LDFLAGS :=
 LDLIBS :=
 RUNTIME_LIB :=
+MKDIR_CMD = mkdir -p $(dir $@)
+COPY_CMD = cp $(RUNTIME_LIB) $(RUNTIME_COPY)
+
+ifeq ($(OS),Windows_NT)
+EXE_EXT := .exe
+LDFLAGS += -L external/lib
+LDLIBS += -lglfw3dll -lgdi32
+RUNTIME_LIB := external/lib/glfw3.dll
+MKDIR_CMD = if not exist "$(subst /,\,$(dir $@))" mkdir "$(subst /,\,$(dir $@))"
+COPY_CMD = copy /Y "$(subst /,\,$(RUNTIME_LIB))" "$(subst /,\,$(RUNTIME_COPY))" >NUL
+else
+UNAME_S := $(shell uname -s)
+UNAME_M := $(shell uname -m)
 
 ifeq ($(UNAME_S),Darwin)
 ifeq ($(UNAME_M),arm64)
@@ -42,8 +54,9 @@ LDLIBS += -lX11 -lXrandr -lXi -lXxf86vm -lXcursor
 else
 $(error Unsupported platform: $(UNAME_S))
 endif
+endif
 
-TARGET=build/main
+TARGET=build/main$(EXE_EXT)
 BUILD_ARTIFACTS := $(TARGET)
 
 ifneq ($(strip $(RUNTIME_LIB)),)
@@ -59,11 +72,11 @@ run: build
 	./$(TARGET)
 
 $(TARGET): $(HEADER) $(ROOT_SOURCE) $(SOURCE)
-	mkdir -p $(dir $@)
+	$(MKDIR_CMD)
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(ROOT_SOURCE) $(SOURCE) -o $(TARGET) $(LDFLAGS) $(LDLIBS)
 
 ifneq ($(strip $(RUNTIME_COPY)),)
 $(RUNTIME_COPY): $(RUNTIME_LIB)
-	mkdir -p $(dir $@)
-	cp $(RUNTIME_LIB) $(RUNTIME_COPY)
+	$(MKDIR_CMD)
+	$(COPY_CMD)
 endif
