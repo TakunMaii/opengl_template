@@ -9,6 +9,7 @@ uniform mat4 uView;
 uniform mat4 uProjection;
 
 out vec3 vNormal;
+out vec2 vTexcoord;
 out vec4 vColor;
 
 void main()
@@ -16,5 +17,6 @@ void main()
     mat3 normalMatrix = mat3(transpose(inverse(uModel)));
     gl_Position = uProjection * uView * uModel * vec4(aPos, 1.0);
     vNormal = normalize(normalMatrix * aNormal);
+    vTexcoord = aTexcoord;
     vColor = aColor;
 }

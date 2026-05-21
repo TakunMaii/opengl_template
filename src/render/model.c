@@ -36,7 +36,7 @@ typedef struct {
 } UIntArray;
 
 typedef struct {
-    Mesh* data;
+    ModelMesh* data;
     size_t count;
     size_t capacity;
 } MeshArray;
@@ -154,7 +154,7 @@ static void ensure_mesh_capacity(MeshArray* array, size_t min_capacity)
         new_capacity *= 2;
     }
 
-    array->data = checked_realloc(array->data, new_capacity * sizeof(Mesh));
+    array->data = checked_realloc(array->data, new_capacity * sizeof(ModelMesh));
     array->capacity = new_capacity;
 }
 
@@ -201,7 +201,15 @@ static void push_uint(UIntArray* array, unsigned int value)
     array->data[array->count++] = value;
 }
 
-static void push_mesh(MeshArray* array, Mesh value)
+static char* duplicate_string(const char* text)
+{
+    size_t length = strlen(text) + 1;
+    char* copy = checked_realloc(NULL, length);
+    memcpy(copy, text, length);
+    return copy;
+}
+
+static void push_mesh(MeshArray* array, ModelMesh value)
 {
     ensure_mesh_capacity(array, array->count + 1);
     array->data[array->count++] = value;
@@ -380,9 +388,9 @@ static void reset_mesh_builder(VertexArray* vertices, UIntArray* indices, ObjInd
 }
 
 static void flush_mesh_builder(MeshArray* meshes, VertexArray* vertices, UIntArray* indices,
-        ObjIndexKeyArray* keys)
+        ObjIndexKeyArray* keys, const char* mesh_name)
 {
-    Mesh mesh;
+    ModelMesh mesh;
 
     if (indices->count == 0)
     {
@@ -390,9 +398,30 @@ static void flush_mesh_builder(MeshArray* meshes, VertexArray* vertices, UIntArr
         return;
     }
 
-    mesh = CreateMesh(vertices->data, vertices->count, indices->data, indices->count);
+    mesh = (ModelMesh) {
+        .name = duplicate_string(mesh_name),
+        .mesh = CreateMesh(vertices->data, vertices->count, indices->data, indices->count),
+    };
     push_mesh(meshes, mesh);
     reset_mesh_builder(vertices, indices, keys);
+}
+
+static void parse_group_name(char** cursor, char* mesh_name_buffer, size_t mesh_name_buffer_size)
+{
+    size_t length = 0;
+
+    skip_spaces(cursor);
+    while (**cursor != '\0' && **cursor != '\n' && **cursor != '\r')
+    {
+        if (length + 1 < mesh_name_buffer_size)
+        {
+            mesh_name_buffer[length++] = **cursor;
+        }
+        (*cursor)++;
+    }
+
+    mesh_name_buffer[length] = '\0';
+    skip_rest_of_line(cursor);
 }
 
 static void parse_vertex_position(char** cursor, Vec3Array* positions)
@@ -490,6 +519,7 @@ Model LoadModelFromObj(const char *obj_path)
     UIntArray indices = {0};
     ObjIndexKeyArray keys = {0};
     MeshArray meshes = {0};
+    char current_mesh_name[256] = "default";
     Model model;
 
     while (*cursor != '\0')
@@ -543,15 +573,16 @@ Model LoadModelFromObj(const char *obj_path)
 
         if (starts_with_token(cursor, "o") || starts_with_token(cursor, "g"))
         {
-            flush_mesh_builder(&meshes, &vertices, &indices, &keys);
-            skip_rest_of_line(&cursor);
+            flush_mesh_builder(&meshes, &vertices, &indices, &keys, current_mesh_name);
+            cursor += 1;
+            parse_group_name(&cursor, current_mesh_name, sizeof(current_mesh_name));
             continue;
         }
 
         skip_rest_of_line(&cursor);
     }
 
-    flush_mesh_builder(&meshes, &vertices, &indices, &keys);
+    flush_mesh_builder(&meshes, &vertices, &indices, &keys, current_mesh_name);
 
     free(obj_text);
     free(positions.data);
@@ -567,13 +598,23 @@ Model LoadModelFromObj(const char *obj_path)
     return model;
 }
 
+ModelMesh GetModelMesh(Model model, size_t index)
+{
+    if (index >= model.mesh_count)
+    {
+        PANIC("model mesh index out of range");
+    }
+
+    return model.meshes[index];
+}
+
 void RenderModel(Model model)
 {
     size_t i;
 
     for (i = 0; i < model.mesh_count; ++i)
     {
-        RenderMesh(model.meshes[i]);
+        RenderMesh(model.meshes[i].mesh);
     }
 }
 
@@ -583,7 +624,8 @@ void ReleaseModel(Model model)
 
     for (i = 0; i < model.mesh_count; i++)
     {
-        ReleaseMesh(model.meshes[i]);
+        ReleaseMesh(model.meshes[i].mesh);
+        free((void*)model.meshes[i].name);
     }
     free(model.meshes);
 }

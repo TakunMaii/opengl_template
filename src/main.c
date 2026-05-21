@@ -4,7 +4,11 @@
 #include "core/input.h"
 #include "math/linear_algebra.h"
 #include "render/model.h"
+#include "render/texture.h"
 #include "shader/shader.h"
+#include "utils/log.h"
+
+#define ARRAY_COUNT(array) (sizeof(array) / sizeof((array)[0]))
 
 static Vec3 camera_front_from_angles(float yaw_degrees, float pitch_degrees)
 {
@@ -23,10 +27,21 @@ int main(int argc, char **argv)
     (void)argc;
     (void)argv;
 
+    static const char* texture_paths[] = {
+        "assets/textures/Image_0.png",
+        "assets/textures/Image_1.png",
+        "assets/textures/Image_2.png",
+        "assets/textures/Image_3.png",
+        "assets/textures/Image_4.png",
+        "assets/textures/Image_5.png",
+        "assets/textures/Image_6.png",
+    };
+
     InitWindow(800, 600, "OpenGl template");
     InitInput();
     Model test_model = LoadModelFromObj("assets/character.obj");
     Shader test_shader = LoadShader("assets/shaders/test.vs", "assets/shaders/test.fs");
+    Texture mesh_textures[ARRAY_COUNT(texture_paths)];
     Vec3 camera_position = vec3(0.0f, 0.09f, 0.35f);
     Vec3 world_up = vec3(0.0f, 1.0f, 0.0f);
     float yaw = -90.0f;
@@ -34,6 +49,17 @@ int main(int argc, char **argv)
     float move_speed = 0.25f;
     float mouse_sensitivity = 0.08f;
     double last_frame_time = GetTime();
+    size_t texture_index;
+
+    if (test_model.mesh_count != ARRAY_COUNT(texture_paths))
+    {
+        PANIC("model mesh count and texture count mismatch");
+    }
+
+    for (texture_index = 0; texture_index < ARRAY_COUNT(texture_paths); ++texture_index)
+    {
+        mesh_textures[texture_index] = LoadTexture(texture_paths[texture_index]);
+    }
 
     SetCursorCaptured(true);
 
@@ -50,6 +76,7 @@ int main(int argc, char **argv)
         Mat4 view;
         int framebuffer_width;
         int framebuffer_height;
+        size_t mesh_index;
 
         last_frame_time = current_frame_time;
         UpdateInput();
@@ -114,13 +141,24 @@ int main(int argc, char **argv)
         SetShaderMat4(test_shader, "uView", view);
         SetShaderMat4(test_shader, "uProjection", projection);
         SetShaderVec3(test_shader, "uLightDirection", normalize3(vec3(-0.5f, -1.0f, -0.35f)));
-        RenderModel(test_model);
+        SetShaderInt(test_shader, "uDiffuseMap", 0);
+        for (mesh_index = 0; mesh_index < test_model.mesh_count; ++mesh_index)
+        {
+            ModelMesh mesh = GetModelMesh(test_model, mesh_index);
+            BindTexture(mesh_textures[mesh_index], 0);
+            RenderMesh(mesh.mesh);
+            UnbindTexture(0);
+        }
         EndShaderMode();
         EndDrawing();
     }
 
     ReleaseModel(test_model);
     ReleaseShader(test_shader);
+    for (texture_index = 0; texture_index < ARRAY_COUNT(texture_paths); ++texture_index)
+    {
+        ReleaseTexture(mesh_textures[texture_index]);
+    }
 
     CloseWindow();
     return 0;
