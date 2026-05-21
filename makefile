@@ -1,8 +1,8 @@
 .PHONY: all build run
 
-HEADER=src/utils/file.h src/utils/log.h src/shader/shader.h
+HEADER=src/utils/file.h src/utils/log.h src/shader/shader.h src/math/linear_algebra.h src/render/mesh.h src/render/color.h
 ROOT_SOURCE=src/main.c src/glad.c
-SOURCE=src/utils/file.c src/utils/log.c src/shader/shader.c
+SOURCE=src/utils/file.c src/utils/log.c src/shader/shader.c src/math/linear_algebra.c src/render/mesh.c src/render/color.c
 
 CC=gcc
 EXE_EXT :=
