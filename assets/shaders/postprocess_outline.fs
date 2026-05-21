@@ -76,4 +76,5 @@ void main()
     float outlineMask = clamp(max(depthEdge, normalEdge) * uOutlineStrength, 0.0, 1.0);
 
     FragColor = mix(sceneColor, uOutlineColor, outlineMask * uOutlineColor.a);
+    FragColor = sceneColor;
 }
