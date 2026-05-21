@@ -77,12 +77,12 @@ Shader LoadShader(const char* vertex_shader_path, const char* fragment_shader_pa
     };
 }
 
-void UseShader(Shader shader)
+void BeginShaderMode(Shader shader)
 {
     glUseProgram(shader.program);
 }
 
-void EndUseShader()
+void EndShaderMode()
 {
     glUseProgram(0);
 }
