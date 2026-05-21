@@ -35,7 +35,7 @@ int main(void)
     InitWindow(1280, 720, "glTF OpenGL Wrapper");
     InitInput();
 
-    scene = LoadSceneFromGltf("assets/character.glb");
+    scene = LoadSceneFromGltf("assets/Zombie_World/Characters/glTF/Characters_GermanShepherd.gltf");
     renderer_settings = DefaultRendererSettings();
     renderer = CreateRenderer(1280, 720, renderer_settings);
     SetCursorCaptured(true);
