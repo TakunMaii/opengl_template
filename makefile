@@ -1,13 +1,13 @@
 .PHONY: all build run
 
-HEADER=
+HEADER=src/utils/file.h src/utils/log.h src/shader/shader.h
 ROOT_SOURCE=src/main.c src/glad.c
-SOURCE=
+SOURCE=src/utils/file.c src/utils/log.c src/shader/shader.c
 
 CC=gcc
 EXE_EXT :=
 
-CPPFLAGS := -I external/include
+CPPFLAGS := -I external/include -I src
 CFLAGS := -Wall -Wextra
 LDFLAGS :=
 LDLIBS :=
