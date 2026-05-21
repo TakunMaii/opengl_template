@@ -1,4 +1,5 @@
 #include "core.h"
+#include "core_internal.h"
 #include <glad/glad.h>
 #include "GLFW/glfw3.h"
 #include "utils/log.h"
@@ -40,6 +41,8 @@ void InitWindow(int width, int height, const char* title)
         PANIC("glad initialize failed");
     }
 
+    glEnable(GL_DEPTH_TEST);
+
     {
         int framebuffer_width;
         int framebuffer_height;
@@ -56,10 +59,25 @@ bool WindowShouldClose()
     }
     return glfwWindowShouldClose(window);
 }
+
+double GetTime(void)
+{
+    return glfwGetTime();
+}
+
+void GetFramebufferSize(int* width, int* height)
+{
+    if (window == NULL)
+    {
+        PANIC("window is null");
+    }
+    glfwGetFramebufferSize(window, width, height);
+}
+
 void ClearBackground(Color color)
 {
     glClearColor(color.r, color.g, color.b, color.a);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void CloseWindow()
@@ -74,8 +92,10 @@ void BeginDrawing()
 
 void EndDrawing()
 {
-    // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-    // -------------------------------------------------------------------------------
     glfwSwapBuffers(window);
-    glfwPollEvents();
+}
+
+GLFWwindow* core_get_window(void)
+{
+    return window;
 }

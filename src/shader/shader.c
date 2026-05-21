@@ -4,6 +4,7 @@
 #include "utils/file.h"
 #include "utils/log.h"
 #include <stdbool.h>
+#include <stdlib.h>
 
 static bool compile_shader(GLuint shader, const char *source)
 {
@@ -71,6 +72,8 @@ Shader LoadShader(const char* vertex_shader_path, const char* fragment_shader_pa
 
     glDeleteShader(vertex_shader);
     glDeleteShader(fragment_shader);
+    free(vertex_shader_source);
+    free(fragment_shader_source);
 
     return (Shader){
         .program = shader_program 
@@ -85,6 +88,18 @@ void BeginShaderMode(Shader shader)
 void EndShaderMode()
 {
     glUseProgram(0);
+}
+
+void SetShaderMat4(Shader shader, const char* name, Mat4 value)
+{
+    GLint location = glGetUniformLocation(shader.program, name);
+    glUniformMatrix4fv(location, 1, GL_TRUE, mat4_data(&value));
+}
+
+void SetShaderVec3(Shader shader, const char* name, Vec3 value)
+{
+    GLint location = glGetUniformLocation(shader.program, name);
+    glUniform3f(location, value.x, value.y, value.z);
 }
 
 void ReleaseShader(Shader shader)
