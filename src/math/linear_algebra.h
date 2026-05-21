@@ -22,6 +22,13 @@ typedef struct {
     float w;
 } Vec4;
 
+typedef struct {
+    float x;
+    float y;
+    float z;
+    float w;
+} Quat;
+
 /*
 x0 y0 z0 w0
 x1 y1 z1 w1
@@ -42,6 +49,7 @@ float lerpf(float a, float b, float t);
 Vec2 vec2(float x, float y);
 Vec3 vec3(float x, float y, float z);
 Vec4 vec4(float x, float y, float z, float w);
+Quat quat(float x, float y, float z, float w);
 
 Vec2 add2(const Vec2 a, const Vec2 b);
 Vec3 add3(const Vec3 a, const Vec3 b);
@@ -77,19 +85,28 @@ Vec2 lerp2(const Vec2 a, const Vec2 b, float t);
 Vec3 lerp3(const Vec3 a, const Vec3 b, float t);
 Vec4 lerp4(const Vec4 a, const Vec4 b, float t);
 
+float dot_quat(const Quat a, const Quat b);
+Quat normalize_quat(const Quat q);
+Quat quat_nlerp(const Quat a, const Quat b, float t);
+Quat quat_slerp(const Quat a, const Quat b, float t);
+
 Mat4 mat4_zero(void);
 Mat4 mat4_identity(void);
 Mat4 mat4_from_rows(Vec4 row0, Vec4 row1, Vec4 row2, Vec4 row3);
+Mat4 mat4_from_column_major(const float* values);
 
 Mat4 mat4_transpose(const Mat4 m);
 Mat4 mat4_mul(const Mat4 a, const Mat4 b);
 Vec4 mat4_mul_vec4(const Mat4 m, const Vec4 v);
+Mat4 mat4_inverse(const Mat4 m);
 
 Mat4 mat4_translate(const Vec3 offset);
 Mat4 mat4_scale(const Vec3 factors);
 Mat4 mat4_rotate_x(float radians);
 Mat4 mat4_rotate_y(float radians);
 Mat4 mat4_rotate_z(float radians);
+Mat4 mat4_from_quat(Quat rotation);
+Mat4 mat4_from_trs(Vec3 translation, Quat rotation, Vec3 scale);
 
 Mat4 mat4_ortho(float left, float right, float bottom, float top, float near_clip, float far_clip);
 Mat4 mat4_perspective(float fov_y_radians, float aspect_ratio, float near_clip, float far_clip);

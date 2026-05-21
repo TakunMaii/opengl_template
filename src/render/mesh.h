@@ -9,14 +9,21 @@ typedef struct {
     Vec3 position;
     Vec3 normal;
     Vec2 texcoord;
+    Vec2 texcoord1;
+    Vec4 tangent;
     Color color;
+    Vec4 joints;
+    Vec4 weights;
 } Vertex;
 
 typedef struct {
     unsigned int VAO;
     unsigned int VBO;
     unsigned int EBO;
-    size_t indices_number;
+    unsigned int primitive_mode;
+    size_t vertex_count;
+    size_t index_count;
+    int has_indices;
 } Mesh;
 
 Mesh CreateMesh(const Vertex* vertices, size_t vertex_count,

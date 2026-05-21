@@ -4,15 +4,18 @@
 #include "utils/file.h"
 #include "utils/log.h"
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 static GLint get_uniform_location(GLuint program, const char* name)
 {
     GLint location = glGetUniformLocation(program, name);
+    static char warning_buffer[256];
 
     if (location < 0)
     {
-        WARN("shader uniform not found");
+        snprintf(warning_buffer, sizeof(warning_buffer), "shader uniform not found: %s", name);
+        WARN(warning_buffer);
     }
 
     return location;
