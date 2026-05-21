@@ -6,6 +6,18 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+static GLint get_uniform_location(GLuint program, const char* name)
+{
+    GLint location = glGetUniformLocation(program, name);
+
+    if (location < 0)
+    {
+        WARN("shader uniform not found");
+    }
+
+    return location;
+}
+
 static bool compile_shader(GLuint shader, const char *source)
 {
     int success;
@@ -90,16 +102,40 @@ void EndShaderMode()
     glUseProgram(0);
 }
 
+void SetShaderFloat(Shader shader, const char* name, float value)
+{
+    GLint location = get_uniform_location(shader.program, name);
+    glUniform1f(location, value);
+}
+
+void SetShaderInt(Shader shader, const char* name, int value)
+{
+    GLint location = get_uniform_location(shader.program, name);
+    glUniform1i(location, value);
+}
+
+void SetShaderVec2(Shader shader, const char* name, Vec2 value)
+{
+    GLint location = get_uniform_location(shader.program, name);
+    glUniform2f(location, value.x, value.y);
+}
+
 void SetShaderMat4(Shader shader, const char* name, Mat4 value)
 {
-    GLint location = glGetUniformLocation(shader.program, name);
+    GLint location = get_uniform_location(shader.program, name);
     glUniformMatrix4fv(location, 1, GL_TRUE, mat4_data(&value));
 }
 
 void SetShaderVec3(Shader shader, const char* name, Vec3 value)
 {
-    GLint location = glGetUniformLocation(shader.program, name);
+    GLint location = get_uniform_location(shader.program, name);
     glUniform3f(location, value.x, value.y, value.z);
+}
+
+void SetShaderVec4(Shader shader, const char* name, Vec4 value)
+{
+    GLint location = get_uniform_location(shader.program, name);
+    glUniform4f(location, value.x, value.y, value.z, value.w);
 }
 
 void ReleaseShader(Shader shader)
